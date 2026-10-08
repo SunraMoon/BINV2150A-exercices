@@ -20,7 +20,11 @@ const RecipeCard = ({ title, imageUrl, duration, difficulty,description }: Recip
                 alt={title}
                 style={{ width: "200px", height: "150px", objectFit: "cover" }}
             />
-            {/* Exo2*/}
+            {/* Exo2
+            grâce à l'opérateur &&, le paragraphe 
+             n'est rendu que si description est fournie.
+              Si elle est absente ou vide, React n'affiche rien.
+            */}
             {description && <p>{description}</p>}
             <p>
                 Durée : {duration} minutes
