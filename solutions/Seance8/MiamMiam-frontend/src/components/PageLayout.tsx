@@ -1,4 +1,4 @@
-//Exo4
+
 //Creation d'un composant PageLayout
 
 import type { ReactNode } from "react";

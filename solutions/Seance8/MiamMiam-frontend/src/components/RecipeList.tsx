@@ -1,4 +1,4 @@
-//exo3)
+
 //Cration d'un composant RecipeList 
 import RecipeCard from "./RecipeCard";
 
