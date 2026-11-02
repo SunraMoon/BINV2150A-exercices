@@ -4,6 +4,7 @@ import { createTheme, CssBaseline, ThemeProvider, Box } from "@mui/material";
 import PageLayout from "./components/PageLayout";
 import RecipeList from "./components/RecipeList";
 import RecipeDetail from "./components/RecipeDetail"; // 👈 Ajout exo 6
+import { RecipeForm } from "./components/RecipeForm";
 import { recipes } from "./data/recipes";             // 👈 Ajout exo 6
 // Exo 2
 import miammiamLogo from "./assets/miammiam.png";
@@ -31,7 +32,8 @@ const App = () => {
             style={{ maxWidth: "100%", height: "auto" }}
           />
         </Box>
-
+      {/* Étape 6 : Formulaire affiché au-dessus de la liste des recettes */}
+        <RecipeForm />
         {/* Liste de toutes les recettes en grille */}
         <RecipeList />
 

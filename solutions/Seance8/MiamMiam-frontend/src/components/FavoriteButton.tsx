@@ -14,7 +14,7 @@ const FavoriteButton = () => {
       onClick={() => setIsFavorite((prev) => !prev)}
     >
       {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-    </IconButton>
+    </IconButton> 
   );
 };
 
