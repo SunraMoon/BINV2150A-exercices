@@ -5,9 +5,12 @@ import FavoriteButton from "./FavoriteButton";
 
 interface RecipeCardProps {
   recipe: Recipe;
+  onDelete: (id: number) => void;
+  isFavorite: boolean; 
+  onToggleFavorite: (id: number) => void;
 }
 
-const RecipeCard = ({ recipe }: RecipeCardProps) => {
+const RecipeCard = ({ recipe ,onDelete}: RecipeCardProps) => {
   // Recherche de la catégorie associée à la recette
   if (!recipe) {
     return null;
@@ -76,6 +79,9 @@ const RecipeCard = ({ recipe }: RecipeCardProps) => {
 
      <CardActions sx={{ justifyContent: "space-between" }}>
   <Button size="small">Voir la recette</Button>
+  <Button size="small" color="error" onClick={() => onDelete(recipe.id)}>
+          Supprimer
+        </Button>
   <FavoriteButton /> 
 </CardActions>
     </Card>

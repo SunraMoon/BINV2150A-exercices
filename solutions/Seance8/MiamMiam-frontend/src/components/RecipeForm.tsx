@@ -16,6 +16,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 // Adaptez le chemin selon l'emplacement de votre fichier categories
 import { categories } from "../data/categories";
+import type { NewRecipe } from "../models/recipe";
 
 // 1. Interfaces et types
 export interface RecipeFormData {
@@ -54,7 +55,11 @@ const initialForm: RecipeFormData = {
   categoryId: "",
 };
 
-export const RecipeForm = () => {
+interface RecipeFormProps {
+  onAdd: (recipe: NewRecipe) => void;
+}
+
+export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
   // États principaux
   const [form, setForm] = useState<RecipeFormData>(initialForm);
   const [submitted, setSubmitted] = useState(false);
@@ -172,7 +177,8 @@ export const RecipeForm = () => {
       cookTime: Number(form.cookTime),
       servings: Number(form.servings),
       difficulty: form.difficulty,
-      categoryId: form.categoryId,
+      categoryId: Number(form.categoryId), // Conversion en number ici
+      tags: [],
       // Conversion des ingrédients : conversion quantité en Number et exclusion de `key`
       ingredients: ingredients
         .filter((item) => item.name.trim() !== "" && Number(item.quantity) > 0)
@@ -186,7 +192,8 @@ export const RecipeForm = () => {
         .map((step) => step.instruction.trim())
         .filter((instruction) => instruction.length > 0),
     };
-
+    
+    onAdd(recipeToSave);
     console.log("Recette créée :", recipeToSave);
 
     // Réinitialisation complète
