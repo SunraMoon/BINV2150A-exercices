@@ -2,15 +2,16 @@ import {Card,CardMedia,CardContent,CardActions,Typography,Button,Chip,Rating,Sta
 import type { Recipe } from "../models/recipe";
 import { categories } from "../data/categories";
 import FavoriteButton from "./FavoriteButton";
+import { Link } from "react-router";
 
 interface RecipeCardProps {
   recipe: Recipe;
-  onDelete: (id: number) => void;
+  
   isFavorite: boolean; 
   onToggleFavorite: (id: number) => void;
 }
 
-const RecipeCard = ({ recipe ,onDelete}: RecipeCardProps) => {
+const RecipeCard = ({ recipe ,isFavorite, onToggleFavorite }: RecipeCardProps) => {
   // Recherche de la catégorie associée à la recette
   if (!recipe) {
     return null;
@@ -78,11 +79,11 @@ const RecipeCard = ({ recipe ,onDelete}: RecipeCardProps) => {
       </CardContent>
 
      <CardActions sx={{ justifyContent: "space-between" }}>
-  <Button size="small">Voir la recette</Button>
-  <Button size="small" color="error" onClick={() => onDelete(recipe.id)}>
-          Supprimer
-        </Button>
-  <FavoriteButton /> 
+  <Button size="small" component={Link} to={`/recipes/${recipe.id}`}>
+  Voir la recette
+</Button>
+  
+  <FavoriteButton isFavorite={isFavorite} onToggle={() => onToggleFavorite(recipe.id)} />
 </CardActions>
     </Card>
   );
