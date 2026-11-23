@@ -2,6 +2,7 @@ import { Typography, Button, Box } from "@mui/material";
 import { Link, useParams, useNavigate } from "react-router";
 import RecipeDetail from "../components/RecipeDetail";
 import type { Recipe } from "../models/recipe";
+import { useEffect } from "react";
 
 type RecipeDetailPageProps = {
   recipes: Recipe[];
@@ -14,6 +15,13 @@ const RecipeDetailPage = ({ recipes, onDelete }: RecipeDetailPageProps) => {
   const navigate = useNavigate();
 
   const recipe = recipes.find((r) => r.id === Number(id));
+
+    // Exo 17.1 : titre de l'onglet = titre de la recette
+  // (avant le if : un hook ne doit jamais être après un return)
+  const pageTitle = recipe ? `${recipe.title} - MiamMiam` : "Recette introuvable - MiamMiam";
+  useEffect(() => {
+    document.title = pageTitle;
+  }, [pageTitle]);
 
   // Exo 16.1 : /recipes/abc ou /recipes/999 → recette introuvable
   if (!recipe) {

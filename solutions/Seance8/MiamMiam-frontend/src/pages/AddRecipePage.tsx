@@ -2,12 +2,16 @@ import { Typography, Button } from "@mui/material";
 import { useNavigate } from "react-router";
 import { RecipeForm } from "../components/RecipeForm";
 import type { NewRecipe } from "../models/recipe";
+import { useEffect } from "react";
 
 type AddRecipePageProps = {
   onAdd: (recipe: NewRecipe) => number; // Exo 16.4 : retourne l'id
 };
 
 const AddRecipePage = ({ onAdd }: AddRecipePageProps) => {
+    useEffect(() => {
+  document.title = "MiamMiam"; // Exo 17.1
+}, []);
   const navigate = useNavigate();
 
   // Exo 16.4 : ajouter puis aller sur la page de la nouvelle recette

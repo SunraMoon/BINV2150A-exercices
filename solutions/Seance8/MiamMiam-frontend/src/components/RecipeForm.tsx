@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import type { ChangeEvent, SubmitEvent } from "react";
 import {
   Box,
@@ -17,7 +18,8 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 // Adaptez le chemin selon l'emplacement de votre fichier categories
 import { categories } from "../data/categories";
 import type { NewRecipe } from "../models/recipe";
-
+import { loadDraft, saveDraft, clearDraft } from "../utils/storage";
+ 
 // 1. Interfaces et types
 export interface RecipeFormData {
   title: string;
@@ -29,45 +31,56 @@ export interface RecipeFormData {
   difficulty: number;
   categoryId: string;
 }
-
-interface IngredientInput {
+ 
+export interface IngredientInput {
   key: number;
   name: string;
   quantity: string;
   unit: string;
 }
-
+ 
 type IngredientField = "name" | "quantity" | "unit";
-
-interface StepInput {
+ 
+export interface StepInput {
   key: number;
   instruction: string;
 }
-
+ 
 const initialForm: RecipeFormData = {
   title: "",
   description: "",
   imageUrl: "",
   prepTime: "",
   cookTime: "",
-  servings: "", 
+  servings: "",
   difficulty: 1,
   categoryId: "",
 };
-
+ 
 interface RecipeFormProps {
   onAdd: (recipe: NewRecipe) => void;
 }
-
+ 
 export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
-  // États principaux
-  const [form, setForm] = useState<RecipeFormData>(initialForm);
+  // Exo 17.5 : brouillon lu une seule fois, au premier rendu (initialisation paresseuse)
+  // Choix du sessionStorage : voir le commentaire dans utils/storage.ts
+  const [draft] = useState(() => loadDraft());
+ 
+  // États principaux : brouillon s'il existe, sinon formulaire vide
+  const [form, setForm] = useState<RecipeFormData>(() => draft?.form ?? initialForm);
   const [submitted, setSubmitted] = useState(false);
-
+ 
   // Collections comme états
-  const [ingredients, setIngredients] = useState<IngredientInput[]>([]);
-  const [steps, setSteps] = useState<StepInput[]>([]);
-
+  const [ingredients, setIngredients] = useState<IngredientInput[]>(
+    () => draft?.ingredients ?? []
+  );
+  const [steps, setSteps] = useState<StepInput[]>(() => draft?.steps ?? []);
+ 
+  // Exo 17.5 : chaque modification du formulaire est enregistrée dans le brouillon
+  useEffect(() => {
+    saveDraft({ form, ingredients, steps });
+  }, [form, ingredients, steps]);
+ 
   // Handlers formulaires statiques
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -75,11 +88,11 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
     const { name, value } = event.target;
     setForm({ ...form, [name]: value });
   };
-
+ 
   const handleRatingChange = (_event: unknown, newValue: number | null) => {
     setForm({ ...form, difficulty: newValue ?? 1 });
   };
-
+ 
   // --- Gestion des Ingrédients (Immuabilité) ---
   const addIngredient = () => {
     setIngredients([
@@ -87,11 +100,11 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
       { key: Date.now() + Math.random(), name: "", quantity: "", unit: "g" },
     ]);
   };
-
+ 
   const removeIngredient = (key: number) => {
     setIngredients(ingredients.filter((item) => item.key !== key));
   };
-
+ 
   const updateIngredient = (
     key: number,
     field: IngredientField,
@@ -103,7 +116,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
       )
     );
   };
-
+ 
   // --- Gestion des Étapes (Immuabilité) ---
   const addStep = () => {
     setSteps([
@@ -111,11 +124,11 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
       { key: Date.now() + Math.random(), instruction: "" },
     ]);
   };
-
+ 
   const removeStep = (key: number) => {
     setSteps(steps.filter((step) => step.key !== key));
   };
-
+ 
   const updateStep = (key: number, value: string) => {
     setSteps(
       steps.map((step) =>
@@ -123,35 +136,35 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
       )
     );
   };
-
+ 
   // Optionnel : Réordonnancement sans mutation
   const moveStep = (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= steps.length) return;
-
+ 
     const newSteps = [...steps];
     const [movedStep] = newSteps.splice(index, 1);
     newSteps.splice(targetIndex, 0, movedStep);
     setSteps(newSteps);
   };
-
+ 
   // --- Validations ---
   const titleError = form.title.trim().length < 3;
   const prepTimeError = form.prepTime === "" || Number(form.prepTime) < 0;
   const cookTimeError = form.cookTime === "" || Number(form.cookTime) < 0;
   const servingsError = form.servings === "" || Number(form.servings) < 1;
   const categoryError = form.categoryId === "";
-
+ 
   // Validation Ingrédients : au moins 1 avec nom et quantité > 0
   const hasValidIngredient = ingredients.some(
     (item) => item.name.trim().length > 0 && Number(item.quantity) > 0
   );
   const ingredientsError = !hasValidIngredient;
-
+ 
   // Validation Étapes : au moins 1 étape non vide
   const hasValidStep = steps.some((step) => step.instruction.trim().length > 0);
   const stepsError = !hasValidStep;
-
+ 
   const isValid =
     !titleError &&
     !prepTimeError &&
@@ -160,14 +173,23 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
     !categoryError &&
     !ingredientsError &&
     !stepsError;
-
+ 
+  // Exo 17.6 : vide le formulaire et supprime le brouillon
+  const resetForm = () => {
+    clearDraft();
+    setForm(initialForm);
+    setIngredients([]);
+    setSteps([]);
+    setSubmitted(false);
+  };
+ 
   // --- Soumission ---
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSubmitted(true);
-
+ 
     if (!isValid) return;
-
+ 
     // Construction de l'objet final nettoyé
     const recipeToSave = {
       title: form.title.trim(),
@@ -192,17 +214,13 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
         .map((step) => step.instruction.trim())
         .filter((instruction) => instruction.length > 0),
     };
-    
+ 
     onAdd(recipeToSave);
-    console.log("Recette créée :", recipeToSave);
-
-    // Réinitialisation complète
-    setForm(initialForm);
-    setIngredients([]);
-    setSteps([]);
-    setSubmitted(false);
+ 
+    // Exo 17.6 : recette ajoutée → brouillon terminé, on le supprime
+    resetForm();
   };
-
+ 
   return (
     <Stack
       component="form"
@@ -213,7 +231,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
       <Typography variant="h5" component="h2">
         Ajouter une recette
       </Typography>
-
+ 
       {/* Titre */}
       <TextField
         label="Titre"
@@ -223,7 +241,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
         error={submitted && titleError}
         helperText={submitted && titleError ? "Au moins 3 caractères" : ""}
       />
-
+ 
       {/* Description */}
       <TextField
         label="Description"
@@ -233,7 +251,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
         multiline
         rows={3}
       />
-
+ 
       {/* URL de l'image */}
       <TextField
         label="URL de l'image"
@@ -241,7 +259,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
         value={form.imageUrl}
         onChange={handleChange}
       />
-
+ 
       {/* Temps de préparation, cuisson, portions */}
       <Stack direction="row" spacing={2}>
         <TextField
@@ -279,7 +297,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
           helperText={submitted && servingsError ? "Au moins 1" : ""}
         />
       </Stack>
-
+ 
       {/* Catégorie */}
       <TextField
         select
@@ -296,7 +314,7 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
           </MenuItem>
         ))}
       </TextField>
-
+ 
       {/* Difficulté */}
       <Box>
         <Typography component="legend">Difficulté</Typography>
@@ -310,13 +328,13 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
           <FormHelperText error>Veuillez choisir une difficulté</FormHelperText>
         )}
       </Box>
-
+ 
       {/* --- Section Ingrédients --- */}
       <Box>
         <Typography variant="h6" sx={{ mb: 1 }}>
           Ingrédients
         </Typography>
-
+ 
         <Stack spacing={1.5}>
           {ingredients.map((ingredient) => (
             <Stack key={ingredient.key} direction="row" spacing={1} sx={{ alignItems: "center" }}>
@@ -358,24 +376,24 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
             </Stack>
           ))}
         </Stack>
-
+ 
         <Button onClick={addIngredient} variant="outlined" sx={{ mt: 1.5 }}>
           Ajouter un ingrédient
         </Button>
-
+ 
         {submitted && ingredientsError && (
           <FormHelperText error>
             Au moins un ingrédient complet (nom et quantité supérieure à 0) est requis.
           </FormHelperText>
         )}
       </Box>
-
+ 
       {/* --- Section Étapes --- */}
       <Box>
         <Typography variant="h6" sx={{ mb: 1 }}>
           Étapes de préparation
         </Typography>
-
+ 
         <Stack spacing={1.5}>
           {steps.map((step, index) => (
             <Stack key={step.key} direction="row" spacing={1} sx={{ alignItems: "flex-start" }}>
@@ -416,22 +434,34 @@ export const RecipeForm = ({ onAdd }: RecipeFormProps) => {
             </Stack>
           ))}
         </Stack>
-
+ 
         <Button onClick={addStep} variant="outlined" sx={{ mt: 1.5 }}>
           Ajouter une étape
         </Button>
-
+ 
         {submitted && stepsError && (
           <FormHelperText error>
             Au moins une étape non vide est requise.
           </FormHelperText>
         )}
       </Box>
-
-      {/* Soumission */}
-      <Button type="submit" variant="contained" size="large">
-        Créer la recette
-      </Button>
+ 
+      {/* Soumission + Exo 17.6 : bouton pour effacer le brouillon */}
+      <Stack direction="row" spacing={2}>
+        <Button type="submit" variant="contained" size="large">
+          Créer la recette
+        </Button>
+        <Button
+          type="button"
+          variant="outlined"
+          color="error"
+          size="large"
+          onClick={resetForm}
+        >
+          Effacer le brouillon
+        </Button>
+      </Stack>
     </Stack>
   );
 };
+ 

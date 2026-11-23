@@ -4,6 +4,8 @@ import RecipeList from "../components/RecipeList";
 import { SearchBar } from "../components/SearchBar";
 import { CategoryFilter } from "../components/CategoryFilter";
 import type { Recipe } from "../models/recipe";
+import { useEffect } from "react";
+
 
 // Exo 16.6 : query et categoryId ne sont plus des props, ils viennent de l'URL
 type HomePageProps = {
@@ -13,7 +15,12 @@ type HomePageProps = {
 };
 
 const HomePage = ({ recipes, favorites, onToggleFavorite }: HomePageProps) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  
+    useEffect(() => {
+  document.title = "MiamMiam"; // Exo 17.1
+}, []);
+
+    const [searchParams, setSearchParams] = useSearchParams();
 
   // Exo 16.6 : lecture des filtres dans l'URL (toujours des string ou null)
   const query = searchParams.get("search") ?? "";
